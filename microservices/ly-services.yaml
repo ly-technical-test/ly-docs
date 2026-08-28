@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: ly-services docs
+  version: 1.0.0
+  description: Rotas do microserviço ly-services.
+servers:
+  - url: http://localhost:3000
+    description: Servidor Local
+paths:
+  /v1/ping:
+    get:
+      summary: Healthcheck
+      description: Retorna a mensagem "pong" e também o status da API.
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              example:
+                code: 200
+                data: pong
+                message: ok
+                metadata:
+                  responseAt: '2026-08-28T00:00:00.000Z'
+                  method: GET
+                  route: /v1/ping

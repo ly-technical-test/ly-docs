@@ -1,0 +1,31 @@
+services:
+  api:
+    image: ${APP_NAME}-${ENVIRONMENT}
+    hostname: ${APP_NAME}-${ENVIRONMENT}
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.${DOCKER_SUFFIX}
+    env_file:
+      - .env
+    networks:
+      microservices:
+        aliases:
+          - ${APP_NAME}-${ENVIRONMENT}
+          - ${APP_NAME}-${ENVIRONMENT}_api
+    ports:
+      - ${EXTERNAL_PORT}:${API_PORT}
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        order: start-first
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+networks:
+  microservices:
+    external: true
+    name: microservices_network
