@@ -4,8 +4,10 @@ info:
   version: 1.0.0
   description: Pontos de acesso do microsserviço ly-services.
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:6001
     description: Servidor Local
+  - url: http://ly-api.gabs.com.br/ly-services
+    description: Servidor de Sandbox
 paths:
   /v1/ping:
     get:
@@ -96,10 +98,13 @@ paths:
                 - amount
                 - description
                 - payment_method
+                - customerName
+                - customerDoc
+                - customerEmail
               properties:
                 amount:
                   type: number
-                  example: 100.50
+                  example: 100.00
                 description:
                   type: string
                   example: Cobrança de teste
@@ -110,8 +115,19 @@ paths:
                     - boleto
                     - cartao
                     - all
+                    - todos
                   example: pix
-                  description: Método de pagamento desejado (pix; boleto; cartao; ou 'all' para permitir todos os métodos)
+                  description: Método de pagamento desejado (pix; boleto; cartao; ou 'all'/'todos' para permitir todos os métodos). Sandbox só aceita alguns customers, ele está neste exemplo
+                customerName:
+                  type: string
+                  example: Valerio de Aguiar Zorzato
+                customerDoc:
+                  type: string
+                  example: "96050176876"
+                customerEmail:
+                  type: string
+                  format: email
+                  example: valerio@gmail.com
       responses:
         '201':
           description: Cobrança gerada com sucesso
@@ -131,7 +147,7 @@ paths:
             type: string
           example: cob_123456
       responses:
-        '200':
+        '201':
           description: Pagamento simulado com sucesso
         '404':
           description: Cobrança não encontrada
