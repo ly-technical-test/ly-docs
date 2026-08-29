@@ -35,22 +35,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - name
-                - email
-                - password
-              properties:
-                name:
-                  type: string
-                  example: Usuario Teste
-                email:
-                  type: string
-                  format: email
-                  example: usuario@email.com
-                password:
-                  type: string
-                  example: senha12345
+              $ref: '#/components/schemas/RegisterDto'
       responses:
         '201':
           description: Conta criada com sucesso
@@ -65,18 +50,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: usuario@email.com
-                password:
-                  type: string
-                  example: senha12345
+              $ref: '#/components/schemas/LoginDto'
       responses:
         '200':
           description: Login realizado com sucesso
@@ -93,41 +67,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - amount
-                - description
-                - payment_method
-                - customerName
-                - customerDoc
-                - customerEmail
-              properties:
-                amount:
-                  type: number
-                  example: 100.00
-                description:
-                  type: string
-                  example: Cobrança de teste
-                payment_method:
-                  type: string
-                  enum:
-                    - pix
-                    - boleto
-                    - cartao
-                    - all
-                    - todos
-                  example: pix
-                  description: Método de pagamento desejado (pix; boleto; cartao; ou 'all'/'todos' para permitir todos os métodos). Sandbox só aceita alguns customers, ele está neste exemplo
-                customerName:
-                  type: string
-                  example: Valerio de Aguiar Zorzato
-                customerDoc:
-                  type: string
-                  example: "96050176876"
-                customerEmail:
-                  type: string
-                  format: email
-                  example: valerio@gmail.com
+              $ref: '#/components/schemas/IssueChargeDto'
       responses:
         '201':
           description: Cobrança gerada com sucesso
@@ -145,12 +85,37 @@ paths:
           required: true
           schema:
             type: string
-          example: cob_123456
+          example: 6a922ff6beaf7b38d9aa4b34
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatePaymentDto'
       responses:
         '201':
           description: Pagamento simulado com sucesso
         '404':
           description: Cobrança não encontrada
+  /v1/billing/pay-card:
+    post:
+      summary: Pagar cobrança com cartão de crédito
+      description: Tokeniza o cartão e realiza o pagamento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCardDto'
+      responses:
+        '200':
+          description: Sucesso
+        '400':
+          description: Dados do cartão ou da cobrança inválidos
+        '401':
+          description: Acesso não autorizado
   /v1/billing/list:
     get:
       summary: Listar cobranças
@@ -162,9 +127,129 @@ paths:
           description: Lista de cobranças obtida com sucesso
         '401':
           description: Acesso não autorizado
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    RegisterDto:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 128
+          example: Usuario Teste
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: usuario@email.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+          example: senha12345
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: usuario@email.com
+        password:
+          type: string
+          maxLength: 64
+          example: senha12345
+    IssueChargeDto:
+      type: object
+      required:
+        - amount
+        - description
+        - payment_method
+      properties:
+        amount:
+          type: integer
+          minimum: 200
+          maximum: 5000000
+          example: 1100
+          description: Valor da cobrança em centavos
+        description:
+          type: string
+          maxLength: 255
+          example: Cobrança de teste
+        payment_method:
+          type: string
+          maxLength: 20
+          enum:
+            - pix
+            - boleto
+            - cartao
+            - all
+          example: pix
+          description: Método de pagamento desejado (pix; boleto; cartao; ou 'all' para permitir todos os métodos). Sandbox só aceita alguns customers, ele está neste exemplo
+    SimulatePaymentDto:
+      type: object
+      required:
+        - paymentMethod
+      properties:
+        paymentMethod:
+          type: string
+          maxLength: 20
+          enum:
+            - pix
+            - boleto
+            - creditCard
+            - debitCard
+          example: pix
+          description: Método de pagamento que deseja simular a liquidação
+    PayCardDto:
+      type: object
+      required:
+        - chargeId
+        - cardNumber
+        - holder
+        - expiry
+        - cvc
+        - cpfCnpj
+      properties:
+        chargeId:
+          type: string
+          maxLength: 64
+          example: 6a91ffcd9d9f77efa80eae89
+        cardNumber:
+          type: string
+          minLength: 13
+          maxLength: 19
+          example: "4000000000000010"
+        holder:
+          type: string
+          minLength: 2
+          maxLength: 128
+          example: TESTE TEC GABRIEL
+        expiry:
+          type: string
+          minLength: 4
+          maxLength: 7
+          example: "1228"
+        cvc:
+          type: string
+          minLength: 3
+          maxLength: 4
+          example: "123"
+        cpfCnpj:
+          type: string
+          minLength: 11
+          maxLength: 18
+          example: "96050176876"
