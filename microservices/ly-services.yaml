@@ -56,6 +56,33 @@ paths:
           description: Login realizado com sucesso
         '401':
           description: E-mail ou senha incorretos
+  /v1/auth/me:
+    get:
+      summary: Obter perfil do usuário
+      description: Retorna os dados do usuário autenticado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil retornado com sucesso
+        '401':
+          description: Acesso não autorizado
+    put:
+      summary: Atualizar perfil do usuário
+      description: Atualiza o nome ou e-mail do usuário autenticado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: Perfil atualizado com sucesso
+        '401':
+          description: Acesso não autorizado
   /v1/billing/issue:
     post:
       summary: Gerar cobrança
@@ -168,7 +195,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateCustomerDto'
+              $ref: '#/components/schemas/UpdateCustomerDto'
       responses:
         '200':
           description: Cliente atualizado
@@ -228,6 +255,18 @@ components:
           type: string
           maxLength: 64
           example: senha12345
+    UpdateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          example: Usuario Atualizado
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: novoemail@email.com
     IssueChargeDto:
       type: object
       required:
@@ -258,7 +297,7 @@ components:
             - cartao
             - all
           example: pix
-          description: Método de pagamento desejado (pix; boleto; cartao; ou 'all' para permitir todos os métodos). Sandbox só aceita alguns customers, ele está neste exemplo
+          description: Método de pagamento desejado (pix; boleto; cartao; ou 'all' para permitir todos os métodos).
     SimulatePaymentDto:
       type: object
       required:
@@ -282,7 +321,6 @@ components:
         - holder
         - expiry
         - cvc
-        - cpfCnpj
       properties:
         chargeId:
           type: string
@@ -308,11 +346,6 @@ components:
           minLength: 3
           maxLength: 4
           example: "123"
-        cpfCnpj:
-          type: string
-          minLength: 11
-          maxLength: 18
-          example: "96050176876"
     CreateCustomerDto:
       type: object
       required:
@@ -329,7 +362,8 @@ components:
           example: contato@teste.com
         cpfCnpj:
           type: string
-          example: 34778583000106
+          example: "34778583000106"
+          description: Apenas números para CPF e aceita alfanumérico para CNPJ
         address:
           type: object
           required:
@@ -353,10 +387,39 @@ components:
               example: MG
             number:
               type: string
-              example: 325
+              example: "325"
             complement:
               type: string
               example: 1º andar
             zip:
               type: string
-              example: 35170002
+              example: "35170002"
+    UpdateCustomerDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: TEste
+        email:
+          type: string
+          example: contato@teste.com
+        cpfCnpj:
+          type: string
+          example: "34778583000106"
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            zone:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            number:
+              type: string
+            complement:
+              type: string
+            zip:
+              type: string
