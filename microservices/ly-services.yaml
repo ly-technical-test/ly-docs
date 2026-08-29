@@ -303,6 +303,44 @@ paths:
           description: Lista de cobranças obtida com sucesso
         '401':
           description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+  /v1/billing/{id}:
+    get:
+      summary: Obter detalhes da cobrança
+      description: Retorna os dados da cobrança (rota pública). Se o método de pagamento incluir Pix ou Boleto, retorna também a chave pix, qrCode e/ou código de barras na resposta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+      responses:
+        '200':
+          description: Detalhes da cobrança obtidos com sucesso
+          content:
+            application/json:
+              example:
+                code: 200
+                data:
+                  _id: 6a922ff6beaf7b38d9aa4b34
+                  amount: 1100
+                  description: Cobrança de teste
+                  paymentMethod: pix
+                  status: PENDING
+                  pix:
+                    qrcode: 00020101021226580014br.gov.bcb.pix...
+                  boleto:
+                    barcode: 00190000000000000000000000000000000000000000
+                    digitableLine: 00190.00009 00000.000000 00000.000000 0 00000000000000
+                    ourNumber: 0000000000
+                    emv: 00020101021226580014br.gov.bcb.pix...
+                message: ok
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/billing/6a922ff6beaf7b38d9aa4b34
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
   /v1/billing/simulate/{id}:
     post:
       summary: Simular pagamento
