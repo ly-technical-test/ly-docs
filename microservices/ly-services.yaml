@@ -196,7 +196,7 @@ paths:
           description: Falha de comunicação com Lytex (`lytex_client_creation_failed`)
     get:
       summary: Listar clientes de cobrança
-      description: Retorna a lista de clientes de cobrança cadastrados.
+      description: Retorna a lista de clientes de cobrança cadastrados. Suporta busca e paginação.
       security:
         - bearerAuth: []
       parameters:
@@ -206,9 +206,21 @@ paths:
           required: false
           schema:
             type: string
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`).
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: Lista obtida com sucesso
+          description: Lista obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
         '401':
           description: Acesso não autorizado (`unauthorized`, `user_not_found`)
   /v1/customers/{id}:
@@ -302,12 +314,41 @@ paths:
   /v1/billing/list:
     get:
       summary: Listar cobranças
-      description: Mostra todas as cobranças registradas para o usuário.
+      description: Mostra todas as cobranças registradas para o usuário, com suporte a busca e filtro por status. Suporta paginação (page e limit).
       security:
         - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar no nome do cliente ou descrição da cobrança.
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrar por status da cobrança (PENDING, PAID, EXPIRED).
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - PAID
+              - EXPIRED
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`, max 100).
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: Lista de cobranças obtida com sucesso
+          description: Lista de cobranças obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
         '401':
           description: Acesso não autorizado (`unauthorized`, `user_not_found`)
   /v1/billing/{id}:
