@@ -116,6 +116,62 @@ paths:
           description: Dados do cartão ou da cobrança inválidos
         '401':
           description: Acesso não autorizado
+  /v1/customers:
+    post:
+      summary: Criar cliente de cobrança
+      description: Cria um cliente de cobrança associado à sua conta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerDto'
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+    get:
+      summary: Listar clientes de cobrança
+      description: Retorna a lista de clientes de cobrança cadastrados
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista obtida com sucesso
+  /v1/customers/{id}:
+    get:
+      summary: Obter cliente de cobrança
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cliente encontrado
+    put:
+      summary: Atualizar cliente de cobrança
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerDto'
+      responses:
+        '200':
+          description: Cliente atualizado
   /v1/billing/list:
     get:
       summary: Listar cobranças
@@ -175,10 +231,14 @@ components:
     IssueChargeDto:
       type: object
       required:
+        - customerId
         - amount
         - description
         - payment_method
       properties:
+        customerId:
+          type: string
+          example: 6a922ff6beaf7b38d9aa4b34
         amount:
           type: integer
           minimum: 200
@@ -253,3 +313,50 @@ components:
           minLength: 11
           maxLength: 18
           example: "96050176876"
+    CreateCustomerDto:
+      type: object
+      required:
+        - name
+        - email
+        - cpfCnpj
+        - address
+      properties:
+        name:
+          type: string
+          example: TEste
+        email:
+          type: string
+          example: contato@teste.com
+        cpfCnpj:
+          type: string
+          example: 34778583000106
+        address:
+          type: object
+          required:
+            - street
+            - zone
+            - city
+            - state
+            - zip
+          properties:
+            street:
+              type: string
+              example: Rua Doutor Moacir Bairro
+            zone:
+              type: string
+              example: Centro
+            city:
+              type: string
+              example: Cel. Fabriciano
+            state:
+              type: string
+              example: MG
+            number:
+              type: string
+              example: 325
+            complement:
+              type: string
+              example: 1º andar
+            zip:
+              type: string
+              example: 35170002
