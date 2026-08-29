@@ -502,6 +502,15 @@ components:
           minLength: 3
           maxLength: 4
           example: "123"
+        method:
+          type: string
+          maxLength: 20
+          enum:
+            - creditCard
+            - debitCard
+            - cartao
+          example: creditCard
+          description: Método do cartão
     CreateCustomerDto:
       type: object
       required:
