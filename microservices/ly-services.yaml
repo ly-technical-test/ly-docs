@@ -199,6 +199,13 @@ paths:
       description: Retorna a lista de clientes de cobrança cadastrados.
       security:
         - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar em nome, email ou cpf/cnpj do cliente.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Lista obtida com sucesso
