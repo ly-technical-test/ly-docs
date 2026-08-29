@@ -40,7 +40,29 @@ paths:
         '201':
           description: Conta criada com sucesso
         '400':
-          description: Dados informados estão incorretos
+          description: Dados de entrada inválidos (`invalid_name`, `invalid_email`, `invalid_password`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_email
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/register
+        '409':
+          description: E-mail já cadastrado (`email_already_registered`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: email_already_registered
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/register
   /v1/auth/login:
     post:
       summary: Entrar na conta
@@ -54,8 +76,30 @@ paths:
       responses:
         '200':
           description: Login realizado com sucesso
+        '400':
+          description: Dados de entrada inválidos (`invalid_email`, `invalid_password`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_email
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/login
         '401':
-          description: E-mail ou senha incorretos
+          description: Credenciais incorretas (`invalid_credentials`)
+          content:
+            application/json:
+              example:
+                code: 401
+                data: null
+                message: invalid_credentials
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/login
   /v1/auth/me:
     get:
       summary: Obter perfil do usuário
@@ -66,7 +110,17 @@ paths:
         '200':
           description: Perfil retornado com sucesso
         '401':
-          description: Acesso não autorizado
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+          content:
+            application/json:
+              example:
+                code: 401
+                data: null
+                message: user_not_found
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/auth/me
     put:
       summary: Atualizar perfil do usuário
       description: Atualiza o nome ou e-mail do usuário autenticado.
@@ -81,72 +135,26 @@ paths:
       responses:
         '200':
           description: Perfil atualizado com sucesso
-        '401':
-          description: Acesso não autorizado
-  /v1/billing/issue:
-    post:
-      summary: Gerar cobrança
-      description: Cria uma nova cobrança no sistema
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/IssueChargeDto'
-      responses:
-        '201':
-          description: Cobrança gerada com sucesso
-        '401':
-          description: Acesso não autorizado
-  /v1/billing/simulate/{id}:
-    post:
-      summary: Simular pagamento
-      description: Simula o pagamento de uma cobrança existente
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          example: 6a922ff6beaf7b38d9aa4b34
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulatePaymentDto'
-      responses:
-        '201':
-          description: Pagamento simulado com sucesso
-        '404':
-          description: Cobrança não encontrada
-  /v1/billing/pay-card:
-    post:
-      summary: Pagar cobrança com cartão de crédito
-      description: Tokeniza o cartão e realiza o pagamento
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PayCardDto'
-      responses:
-        '200':
-          description: Sucesso
         '400':
-          description: Dados do cartão ou da cobrança inválidos
+          description: Dados inválidos (`invalid_name`, `invalid_email`)
         '401':
-          description: Acesso não autorizado
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '409':
+          description: E-mail já utilizado (`email_already_registered`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: email_already_registered
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: PUT
+                  route: /v1/auth/me
   /v1/customers:
     post:
       summary: Criar cliente de cobrança
-      description: Cria um cliente de cobrança associado à sua conta
+      description: Cria um cliente de cobrança e registra na plataforma Lytex.
       security:
         - bearerAuth: []
       requestBody:
@@ -158,14 +166,44 @@ paths:
       responses:
         '201':
           description: Cliente criado com sucesso
+        '400':
+          description: Dados de cliente inválidos (`invalid_name`, `invalid_email`, `invalid_cpf_cnpj`, `invalid_address`, `invalid_street`, `invalid_zone`, `invalid_city`, `invalid_state`, `invalid_zip`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_cpf_cnpj
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/customers
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '409':
+          description: Cliente/CPF já registrado na Lytex (`lytex_client_already_exists`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: lytex_client_already_exists
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/customers
+        '500':
+          description: Falha de comunicação com Lytex (`lytex_client_creation_failed`)
     get:
       summary: Listar clientes de cobrança
-      description: Retorna a lista de clientes de cobrança cadastrados
+      description: Retorna a lista de clientes de cobrança cadastrados.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Lista obtida com sucesso
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
   /v1/customers/{id}:
     get:
       summary: Obter cliente de cobrança
@@ -180,6 +218,20 @@ paths:
       responses:
         '200':
           description: Cliente encontrado
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente não encontrado (`customer_not_found`)
+          content:
+            application/json:
+              example:
+                code: 404
+                data: null
+                message: customer_not_found
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/customers/6a922ff6beaf7b38d9aa4b34
     put:
       summary: Atualizar cliente de cobrança
       security:
@@ -199,17 +251,121 @@ paths:
       responses:
         '200':
           description: Cliente atualizado
+        '400':
+          description: Campo inválido (`invalid_cpf_cnpj`)
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente não encontrado (`customer_not_found`)
+        '500':
+          description: Falha na atualização junto à Lytex (`lytex_client_update_failed`)
+  /v1/billing/issue:
+    post:
+      summary: Gerar cobrança
+      description: Cria uma nova cobrança no sistema e na API Lytex.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueChargeDto'
+      responses:
+        '201':
+          description: Cobrança gerada com sucesso
+        '400':
+          description: Parâmetro inválido (`invalid_customer_id`, `invalid_amount`, `invalid_description`, `invalid_payment_method`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_amount
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/issue
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente informado não encontrado (`customer_not_found`)
+        '500':
+          description: Falha na emissão junto à Lytex (`lytex_invoice_creation_failed`)
   /v1/billing/list:
     get:
       summary: Listar cobranças
-      description: Mostra todas as cobranças registradas para o usuário
+      description: Mostra todas as cobranças registradas para o usuário.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Lista de cobranças obtida com sucesso
         '401':
-          description: Acesso não autorizado
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+  /v1/billing/simulate/{id}:
+    post:
+      summary: Simular pagamento
+      description: Simula a liquidação/pagamento manual de uma cobrança existente na Lytex.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatePaymentDto'
+      responses:
+        '201':
+          description: Pagamento simulado com sucesso
+        '400':
+          description: Método de pagamento inválido (`invalid_payment_method`)
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
+        '500':
+          description: Erro ao simular liquidação na Lytex (`lytex_simulation_failed`)
+  /v1/billing/pay-card:
+    post:
+      summary: Pagar cobrança com cartão de crédito
+      description: Tokeniza o cartão e realiza a liquidação da cobrança via Lytex.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCardDto'
+      responses:
+        '201':
+          description: Cartão tokenizado e cobrança paga com sucesso
+        '400':
+          description: Dados do cartão inválidos ou método não permitido (`invalid_charge_id`, `invalid_card_number`, `invalid_holder`, `invalid_expiry`, `invalid_cvc`, `missing_lytex_client_id`, `payment_method_not_allowed`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: payment_method_not_allowed
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/pay-card
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
+        '500':
+          description: Falha na tokenização ou processamento (`card_tokenization_failed`, `card_payment_failed`)
 
 components:
   securitySchemes:
