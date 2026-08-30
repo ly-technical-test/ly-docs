@@ -592,9 +592,8 @@ components:
           maxLength: 20
           enum:
             - creditCard
-            - debitCard
           example: creditCard
-          description: Método do cartão (crédito ou débito)
+          description: Método do cartão (cartão de crédito)
     CreateCustomerDto:
       type: object
       required:
