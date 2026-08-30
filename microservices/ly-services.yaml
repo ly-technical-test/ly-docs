@@ -380,8 +380,6 @@ paths:
                   boleto:
                     barcode: 00190000000000000000000000000000000000000000
                     digitableLine: 00190.00009 00000.000000 00000.000000 0 00000000000000
-                    ourNumber: 0000000000
-                    emv: 00020101021226580014br.gov.bcb.pix...
                 message: ok
                 metadata:
                   responseAt: '2026-08-29T00:00:00.000Z'
@@ -391,8 +389,8 @@ paths:
           description: Cobrança não encontrada (`charge_not_found`)
   /v1/billing/simulate/{id}:
     post:
-      summary: Simular pagamento
-      description: Simula a liquidação/pagamento manual de uma cobrança existente na Lytex.
+      summary: Simular liquidação
+      description: Simula a liquidação manual de uma cobrança existente na Lytex.
       security:
         - bearerAuth: []
       parameters:
