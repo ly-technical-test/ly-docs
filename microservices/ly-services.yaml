@@ -552,7 +552,6 @@ components:
             - pix
             - boleto
             - creditCard
-            - debitCard
           example: pix
           description: Método de pagamento que deseja simular a liquidação
     PayCardDto:
@@ -594,9 +593,8 @@ components:
           enum:
             - creditCard
             - debitCard
-            - cartao
           example: creditCard
-          description: Método do cartão
+          description: Método do cartão (crédito ou débito)
     CreateCustomerDto:
       type: object
       required:
