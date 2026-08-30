@@ -21,7 +21,19 @@ Toda a infraestrutura de comunicação (criação de clientes, auth, emissão de
 
 ---
 
-## 3. Acesso à Documentação
+## 3. Variáveis de Ambiente
+
+As configurações da documentação devem ser salvas no arquivo `.env`. As chaves necessárias são:
+
+- `APP_NAME`: Identificador da documentação (`ly-docs`).
+- `EXTERNAL_PORT`: Porta pública de acesso ao Swagger UI.
+- `API_PORT`: Porta interna do contêiner.
+- `ENVIRONMENT`: Ambiente de execução (`development` ou `production`).
+- `DOCKER_SUFFIX`: Sufixo para identificação dos contêineres Docker (`dev` ou `deploy`).
+
+---
+
+## 4. Acesso à Documentação
 
 A documentação está disponibilizada aqui:
 - **Interface Swagger**: [https://ly-api.gabs.com.br/ly-docs/docs](https://ly-api.gabs.com.br/ly-docs/docs)
