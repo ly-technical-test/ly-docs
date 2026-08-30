@@ -196,12 +196,31 @@ paths:
           description: Falha de comunicação com Lytex (`lytex_client_creation_failed`)
     get:
       summary: Listar clientes de cobrança
-      description: Retorna a lista de clientes de cobrança cadastrados.
+      description: Retorna a lista de clientes de cobrança cadastrados. Suporta busca e paginação.
       security:
         - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar em nome, email ou cpf/cnpj do cliente.
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`).
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: Lista obtida com sucesso
+          description: Lista obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
         '401':
           description: Acesso não autorizado (`unauthorized`, `user_not_found`)
   /v1/customers/{id}:
@@ -295,18 +314,83 @@ paths:
   /v1/billing/list:
     get:
       summary: Listar cobranças
-      description: Mostra todas as cobranças registradas para o usuário.
+      description: Mostra todas as cobranças registradas para o usuário, com suporte a busca e filtro por status. Suporta paginação (page e limit).
       security:
         - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar no nome do cliente ou descrição da cobrança.
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrar por status da cobrança (PENDING, PAID, EXPIRED).
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - PAID
+              - EXPIRED
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`, max 100).
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: Lista de cobranças obtida com sucesso
+          description: Lista de cobranças obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
         '401':
           description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+  /v1/billing/{id}:
+    get:
+      summary: Obter detalhes da cobrança
+      description: Retorna os dados da cobrança (rota pública). Se o método de pagamento incluir Pix ou Boleto, retorna também a chave pix, qrCode e/ou código de barras na resposta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+      responses:
+        '200':
+          description: Detalhes da cobrança obtidos com sucesso
+          content:
+            application/json:
+              example:
+                code: 200
+                data:
+                  _id: 6a922ff6beaf7b38d9aa4b34
+                  amount: 1100
+                  description: Cobrança de teste
+                  paymentMethod: pix
+                  status: PENDING
+                  pix:
+                    qrcode: 00020101021226580014br.gov.bcb.pix...
+                  boleto:
+                    barcode: 00190000000000000000000000000000000000000000
+                    digitableLine: 00190.00009 00000.000000 00000.000000 0 00000000000000
+                message: ok
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/billing/6a922ff6beaf7b38d9aa4b34
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
   /v1/billing/simulate/{id}:
     post:
-      summary: Simular pagamento
-      description: Simula a liquidação/pagamento manual de uma cobrança existente na Lytex.
+      summary: Simular liquidação
+      description: Simula a liquidação manual de uma cobrança existente na Lytex.
       security:
         - bearerAuth: []
       parameters:
@@ -466,7 +550,6 @@ components:
             - pix
             - boleto
             - creditCard
-            - debitCard
           example: pix
           description: Método de pagamento que deseja simular a liquidação
     PayCardDto:
@@ -507,10 +590,8 @@ components:
           maxLength: 20
           enum:
             - creditCard
-            - debitCard
-            - cartao
           example: creditCard
-          description: Método do cartão
+          description: Método do cartão (cartão de crédito)
     CreateCustomerDto:
       type: object
       required:
