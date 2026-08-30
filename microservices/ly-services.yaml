@@ -294,7 +294,7 @@ paths:
         '201':
           description: Cobrança gerada com sucesso
         '400':
-          description: Parâmetro inválido/limite excedido (`invalid_customer_id`, `invalid_amount`, `invalid_description`, `invalid_payment_method`, `lytex_invoice_limit_exceeded`)
+          description: Parâmetro inválido/limite excedido (`invalid_customer_id`, `invalid_amount`, `invalid_description`, `invalid_payment_method`, `lytex_invoice_limit_exceeded`, `lytex_invoice_max_value_exceeded`, `lytex_invoice_creation_not_allowed`)
           content:
             application/json:
               example:
