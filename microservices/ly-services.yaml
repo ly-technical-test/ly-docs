@@ -2,18 +2,20 @@ openapi: 3.1.0
 info:
   title: ly-services docs
   version: 1.0.0
-  description: Rotas do microserviço ly-services.
+  description: Pontos de acesso do microsserviço ly-services.
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:6001
     description: Servidor Local
+  - url: http://ly-api.gabs.com.br/ly-services
+    description: Servidor de Sandbox
 paths:
   /v1/ping:
     get:
-      summary: Healthcheck
-      description: Retorna a mensagem "pong" e também o status da API.
+      summary: Verificação do sistema
+      description: Retorna mensagem de teste para verificar se a API está no ar.
       responses:
         '200':
-          description: Sucesso
+          description: API funcionando normalmente
           content:
             application/json:
               example:
@@ -24,3 +26,656 @@ paths:
                   responseAt: '2026-08-28T00:00:00.000Z'
                   method: GET
                   route: /v1/ping
+  /v1/auth/register:
+    post:
+      summary: Cadastro de usuário
+      description: Cria uma nova conta de usuário no sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+      responses:
+        '201':
+          description: Conta criada com sucesso
+        '400':
+          description: Dados de entrada inválidos (`invalid_name`, `invalid_email`, `invalid_password`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_email
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/register
+        '409':
+          description: E-mail já cadastrado (`email_already_registered`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: email_already_registered
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/register
+  /v1/auth/login:
+    post:
+      summary: Entrar na conta
+      description: Autentica o usuário e libera o acesso ao sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Login realizado com sucesso
+        '400':
+          description: Dados de entrada inválidos (`invalid_email`, `invalid_password`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_email
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/login
+        '401':
+          description: Credenciais incorretas (`invalid_credentials`)
+          content:
+            application/json:
+              example:
+                code: 401
+                data: null
+                message: invalid_credentials
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/auth/login
+  /v1/auth/me:
+    get:
+      summary: Obter perfil do usuário
+      description: Retorna os dados do usuário autenticado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil retornado com sucesso
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+          content:
+            application/json:
+              example:
+                code: 401
+                data: null
+                message: user_not_found
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/auth/me
+    put:
+      summary: Atualizar perfil do usuário
+      description: Atualiza o nome ou e-mail do usuário autenticado.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: Perfil atualizado com sucesso
+        '400':
+          description: Dados inválidos (`invalid_name`, `invalid_email`)
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '409':
+          description: E-mail já utilizado (`email_already_registered`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: email_already_registered
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: PUT
+                  route: /v1/auth/me
+  /v1/customers:
+    post:
+      summary: Criar cliente de cobrança
+      description: Cria um cliente de cobrança e registra na plataforma Lytex.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerDto'
+      responses:
+        '201':
+          description: Cliente criado com sucesso
+        '400':
+          description: Dados de cliente inválidos (`invalid_name`, `invalid_email`, `invalid_cpf_cnpj`, `invalid_address`, `invalid_street`, `invalid_zone`, `invalid_city`, `invalid_state`, `invalid_zip`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_cpf_cnpj
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/customers
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '409':
+          description: Cliente/CPF já registrado na Lytex (`lytex_client_already_exists`)
+          content:
+            application/json:
+              example:
+                code: 409
+                data: null
+                message: lytex_client_already_exists
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/customers
+        '500':
+          description: Falha de comunicação com Lytex (`lytex_client_creation_failed`)
+    get:
+      summary: Listar clientes de cobrança
+      description: Retorna a lista de clientes de cobrança cadastrados. Suporta busca e paginação.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar em nome, email ou cpf/cnpj do cliente.
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`).
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+  /v1/customers/{id}:
+    get:
+      summary: Obter cliente de cobrança
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cliente encontrado
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente não encontrado (`customer_not_found`)
+          content:
+            application/json:
+              example:
+                code: 404
+                data: null
+                message: customer_not_found
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/customers/6a922ff6beaf7b38d9aa4b34
+    put:
+      summary: Atualizar cliente de cobrança
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerDto'
+      responses:
+        '200':
+          description: Cliente atualizado
+        '400':
+          description: Campo inválido (`invalid_cpf_cnpj`)
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente não encontrado (`customer_not_found`)
+        '500':
+          description: Falha na atualização junto à Lytex (`lytex_client_update_failed`)
+  /v1/billing/issue:
+    post:
+      summary: Gerar cobrança
+      description: Cria uma nova cobrança no sistema e na API Lytex.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueChargeDto'
+      responses:
+        '201':
+          description: Cobrança gerada com sucesso
+        '400':
+          description: Parâmetro inválido (`invalid_customer_id`, `invalid_amount`, `invalid_description`, `invalid_payment_method`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: invalid_amount
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/issue
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cliente informado não encontrado (`customer_not_found`)
+        '500':
+          description: Falha na emissão junto à Lytex (`lytex_invoice_creation_failed`)
+  /v1/billing/list:
+    get:
+      summary: Listar cobranças
+      description: Mostra todas as cobranças registradas para o usuário, com suporte a busca e filtro por status. Suporta paginação (page e limit).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Termo para buscar no nome do cliente ou descrição da cobrança.
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrar por status da cobrança (PENDING, PAID, EXPIRED).
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - PAID
+              - EXPIRED
+        - name: page
+          in: query
+          description: Número da página (requer `limit`).
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Quantidade de itens por página (requer `page`, max 100).
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de cobranças obtida com sucesso. Se `page` e `limit` forem enviados, retorna com a estrutura { data, total, totalPages, page, limit }.
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+  /v1/billing/{id}:
+    get:
+      summary: Obter detalhes da cobrança
+      description: Retorna os dados da cobrança (rota pública). Se o método de pagamento incluir Pix ou Boleto, retorna também a chave pix, qrCode e/ou código de barras na resposta.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+      responses:
+        '200':
+          description: Detalhes da cobrança obtidos com sucesso
+          content:
+            application/json:
+              example:
+                code: 200
+                data:
+                  _id: 6a922ff6beaf7b38d9aa4b34
+                  amount: 1100
+                  description: Cobrança de teste
+                  paymentMethod: pix
+                  status: PENDING
+                  pix:
+                    qrcode: 00020101021226580014br.gov.bcb.pix...
+                  boleto:
+                    barcode: 00190000000000000000000000000000000000000000
+                    digitableLine: 00190.00009 00000.000000 00000.000000 0 00000000000000
+                message: ok
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: GET
+                  route: /v1/billing/6a922ff6beaf7b38d9aa4b34
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
+  /v1/billing/simulate/{id}:
+    post:
+      summary: Simular liquidação
+      description: Simula a liquidação manual de uma cobrança existente na Lytex.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatePaymentDto'
+      responses:
+        '201':
+          description: Pagamento simulado com sucesso
+        '400':
+          description: Método de pagamento inválido (`invalid_payment_method`)
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
+        '500':
+          description: Erro ao simular liquidação na Lytex (`lytex_simulation_failed`)
+  /v1/billing/pay-card:
+    post:
+      summary: Pagar cobrança com cartão de crédito
+      description: Tokeniza o cartão e realiza a liquidação da cobrança via Lytex.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayCardDto'
+      responses:
+        '201':
+          description: Cartão tokenizado e cobrança paga com sucesso
+        '400':
+          description: Dados do cartão inválidos ou método não permitido (`invalid_charge_id`, `invalid_card_number`, `invalid_holder`, `invalid_expiry`, `invalid_cvc`, `missing_lytex_client_id`, `payment_method_not_allowed`)
+          content:
+            application/json:
+              example:
+                code: 400
+                data: null
+                message: payment_method_not_allowed
+                metadata:
+                  responseAt: '2026-08-29T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/pay-card
+        '401':
+          description: Acesso não autorizado (`unauthorized`, `user_not_found`)
+        '404':
+          description: Cobrança não encontrada (`charge_not_found`)
+        '500':
+          description: Falha na tokenização ou processamento (`card_tokenization_failed`, `card_payment_failed`)
+          content:
+            application/json:
+              example:
+                code: 500
+                data: null
+                message: card_tokenization_failed
+                metadata:
+                  responseAt: '2026-08-30T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/pay-card
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterDto:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 128
+          example: Usuario Teste
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: usuario@email.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+          example: senha12345
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: usuario@email.com
+        password:
+          type: string
+          maxLength: 64
+          example: senha12345
+    UpdateUserDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 128
+          example: Usuario Atualizado
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: novoemail@email.com
+    IssueChargeDto:
+      type: object
+      required:
+        - customerId
+        - amount
+        - description
+        - payment_method
+      properties:
+        customerId:
+          type: string
+          example: 6a922ff6beaf7b38d9aa4b34
+        amount:
+          type: integer
+          minimum: 200
+          maximum: 5000000
+          example: 1100
+          description: Valor da cobrança em centavos
+        description:
+          type: string
+          maxLength: 255
+          example: Cobrança de teste
+        payment_method:
+          type: string
+          maxLength: 20
+          enum:
+            - pix
+            - boleto
+            - cartao
+            - all
+          example: pix
+          description: Método de pagamento desejado (pix; boleto; cartao; ou 'all' para permitir todos os métodos).
+    SimulatePaymentDto:
+      type: object
+      required:
+        - paymentMethod
+      properties:
+        paymentMethod:
+          type: string
+          maxLength: 20
+          enum:
+            - pix
+            - boleto
+            - creditCard
+          example: pix
+          description: Método de pagamento que deseja simular a liquidação
+    PayCardDto:
+      type: object
+      required:
+        - chargeId
+        - cardNumber
+        - holder
+        - expiry
+        - cvc
+      properties:
+        chargeId:
+          type: string
+          maxLength: 64
+          example: 6a91ffcd9d9f77efa80eae89
+        cardNumber:
+          type: string
+          minLength: 13
+          maxLength: 19
+          example: "4000000000000010"
+        holder:
+          type: string
+          minLength: 2
+          maxLength: 128
+          example: TESTE TEC GABRIEL
+        expiry:
+          type: string
+          minLength: 4
+          maxLength: 7
+          example: "1228"
+        cvc:
+          type: string
+          minLength: 3
+          maxLength: 4
+          example: "123"
+        method:
+          type: string
+          maxLength: 20
+          enum:
+            - creditCard
+          example: creditCard
+          description: Método do cartão (cartão de crédito)
+    CreateCustomerDto:
+      type: object
+      required:
+        - name
+        - email
+        - cpfCnpj
+        - address
+      properties:
+        name:
+          type: string
+          example: TEste
+        email:
+          type: string
+          example: contato@teste.com
+        cpfCnpj:
+          type: string
+          example: "34778583000106"
+          description: Apenas números para CPF e aceita alfanumérico para CNPJ
+        address:
+          type: object
+          required:
+            - street
+            - zone
+            - city
+            - state
+            - zip
+          properties:
+            street:
+              type: string
+              example: Rua Doutor Moacir Bairro
+            zone:
+              type: string
+              example: Centro
+            city:
+              type: string
+              example: Cel. Fabriciano
+            state:
+              type: string
+              example: MG
+            number:
+              type: string
+              example: "325"
+            complement:
+              type: string
+              example: 1º andar
+            zip:
+              type: string
+              example: "35170002"
+    UpdateCustomerDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: TEste
+        email:
+          type: string
+          example: contato@teste.com
+        cpfCnpj:
+          type: string
+          example: "34778583000106"
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            zone:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            number:
+              type: string
+            complement:
+              type: string
+            zip:
+              type: string
