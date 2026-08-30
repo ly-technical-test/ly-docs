@@ -450,6 +450,16 @@ paths:
           description: Cobrança não encontrada (`charge_not_found`)
         '500':
           description: Falha na tokenização ou processamento (`card_tokenization_failed`, `card_payment_failed`)
+          content:
+            application/json:
+              example:
+                code: 500
+                data: null
+                message: card_tokenization_failed
+                metadata:
+                  responseAt: '2026-08-30T00:00:00.000Z'
+                  method: POST
+                  route: /v1/billing/pay-card
 
 components:
   securitySchemes:
